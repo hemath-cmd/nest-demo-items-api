@@ -1,30 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { CompanyContextGuard } from './common/guards/company-context.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // 1. ValidationPipe - DTO Validation Work ஆக
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,           // DTO-ல இல்லாத Property-அ Auto Remove பண்ணும்
-    forbidNonWhitelisted: true, // Extra Property வந்தா Error Throw பண்ணும்
-    transform: true,           // Type-அ Auto Convert பண்ணும்
-  }));
-
-  // 2. Swagger Setup - API Docs க்கு
-  const config = new DocumentBuilder()
-    .setTitle('Nest Demo API')
-    .setDescription('Items CRUD API with Validation')
-    .setVersion('1.0')
-    .addTag('items')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // 3-யும் Global-ஆ Apply
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalGuards(new CompanyContextGuard());
 
   await app.listen(3000);
-  console.log(`App running: http://localhost:3000`);
-  console.log(`Swagger docs: http://localhost:3000/api`);
+  console.log('Server is running on http://localhost:3000');
 }
 bootstrap();
